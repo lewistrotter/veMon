@@ -32,6 +32,8 @@ def main():
     #new_site_filter.setSourceModel(sites_model)
     #engine.rootContext().setContextProperty('newSiteFilterModel', new_site_filter)
 
+    # test
+
     sys.exit(app.exec())
 
 
