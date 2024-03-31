@@ -1,10 +1,11 @@
 
 import sys
 
+# pip install PySide6
+
 from PySide6 import QtQml
 from PySide6 import QtWidgets
 from PySide6.QtQuickControls2 import QQuickStyle
-from PySide6.QtPositioning import QGeoCoordinate
 
 from models import core
 
@@ -31,8 +32,6 @@ def main():
     #new_site_filter = core.SiteFilter()
     #new_site_filter.setSourceModel(sites_model)
     #engine.rootContext().setContextProperty('newSiteFilterModel', new_site_filter)
-
-    # test
 
     sys.exit(app.exec())
 
