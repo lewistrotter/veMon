@@ -5,7 +5,7 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-from statsmodels.tsa.seasonal import STL as stl
+#from statsmodels.tsa.seasonal import STL as stl
 
 def _build_harm_matrix(
         ts_rads: np.ndarray,  # doys as radians in array
@@ -350,7 +350,8 @@ if __name__ == '__main__':
     #        number_cpu=1)
 
     # testing: load netcdf normal
-    ds = xr.open_dataset(r"C:\Users\Lewis\Desktop\efreo_park\yandi_veg_ndvi.nc")
+    ds = xr.open_dataset(r"C:\Users\Lewis\Desktop\efreo ndvi all at once\ndvi.nc")
+    ds = ds.isel(x=slice(100, 200), y=slice(100, 200))
     ds = ds.resample(time='M').median()
     ds = ds * 10000   # FIXME: decimal values not working when rounding=False, need to * 10000
     #ds = ds.median(['x', 'y'])
@@ -366,3 +367,5 @@ if __name__ == '__main__':
                  low_thresh=100,
                  rounding=True,
                  number_cpu=1)
+
+    None

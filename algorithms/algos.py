@@ -1,10 +1,13 @@
+
+import os
+import time
 import datetime
 import numpy as np
 #import pandas as pd
 import xarray as xr
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-from statsmodels.tsa.seasonal import STL as stl
+# from statsmodels.tsa.seasonal import STL as stl
 
 def _build_harm_matrix(
         ts_rads: np.ndarray,  # doys as radians in array
@@ -262,9 +265,9 @@ def ewmacd(
         xbar_limit_1=1.5,
         xbar_limit_2=20,
         low_thresh=100,
-        lam=0.3, #0.3,  # close to 1 = only recent values influence ewma, close to 0 historical influence ewma more
-        lam_sigs=3,  # 3 # constant factor to modify ucl - low is tighter ucl range (a lot will be outliers), higher value is leniant ucl range (only most extreme will be outliers)
-        rounding=True, # True # turning this off gets a more nuanced ewma line
+        lam=0.3,  #0.3,  # close to 1 = only recent values influence ewma, close to 0 historical influence ewma more
+        lam_sigs=3, # 3 # constant factor to modify ucl - low is tighter ucl range (a lot will be outliers), higher value is leniant ucl range (only most extreme will be outliers)
+        rounding=True,  # True # turning this off gets a more nuanced ewma line
         persistence=3,
         number_cpu=4,
         write_file=False,
@@ -320,3 +323,73 @@ def ewmacd(
 
     #return tmp
     return dates, ndvi_y, harm_y, resi_y
+
+
+
+def test():
+
+    # testing: load netcdf normal
+    ds = xr.open_dataset(r'../testing/cb.nc')
+
+    ds['ndvi'] = ((ds['nbart_nir_1'] - ds['nbart_red']) /
+                  (ds['nbart_nir_1'] + ds['nbart_red']))
+
+    ds = ds[['ndvi']].median(['y', 'x'])
+    ds = ds.resample(time='1MS').median()
+
+    #ds = ds.fillna(0.2)
+    ds = ds * 10000   # FIXME: decimal values not working when rounding=False, need to * 10000
+
+    dts = ds['time'].data
+    dts = dts[dts >= np.datetime64('2020-01-31T00:00:00.000000000')]
+
+    for dt in dts:
+        print(dt)
+        _ds = ds.where(ds['time'] <= dt, drop=True)
+
+        dates, ndvi_y, harm_y, resi_y = ewmacd(
+            _ds,
+            training_start=2017,
+            training_end=2019,
+            testing_end=2024,
+            number_harmonics=2,
+            xbar_limit_1=1.5,
+            xbar_limit_2=20,
+            low_thresh=100,
+            lam=0.3,  # 0.3,  # close to 1 = only recent values influence ewma, close to 0 historical influence ewma more
+            lam_sigs=3,
+            # 3 # constant factor to modify ucl - low is tighter ucl range (a lot will be outliers), higher value is leniant ucl range (only most extreme will be outliers)
+            rounding=False,  # True # turning this off gets a more nuanced ewma line
+            persistence=1,  # 3,
+            number_cpu=1,
+            write_file=False,
+            file_name=None
+        )
+
+        fig = plt.figure(figsize=[10, 6])
+
+        plt.subplot(2, 1, 1)
+        plt.plot(dates, ndvi_y, color='black', marker='.')
+        plt.plot(dates, harm_y, color='green', marker='.')
+        plt.grid()
+
+        plt.subplot(2, 1, 2)
+        plt.plot(dates, resi_y, color='red', marker='.')
+        plt.grid()
+
+        plt.tight_layout()
+
+        out_fn = str(dt)[0:10] + '.png'
+        out_fp = os.path.join('../testing', out_fn)
+        plt.savefig(out_fp)
+
+        plt.clf()
+        plt.cla()
+        plt.close(fig)
+
+
+
+# testing
+if __name__ == '__main__':
+    #test()
+    ...
